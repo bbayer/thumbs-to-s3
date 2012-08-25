@@ -130,3 +130,13 @@ On your server side you can access posted data like below.
 print_r(json_decode($_POST['data']));
 ?>
 ```
+## Limitations ##
+
+* Script preserves aspect ratio. No crop, scale or advanced filters
+* Only outputs to JPEG format.
+* All stored S3 keys are accessible by everyone. No settings for access control.
+
+## Author ##
+
+Burak BAYER
+<http://www.twitter.com/burakbayer>
