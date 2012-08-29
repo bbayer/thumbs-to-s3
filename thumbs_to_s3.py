@@ -80,7 +80,7 @@ def create_thumbnail( local_filename, remote_filename, temp_folder, size ):
     dirs, filename = os.path.split(remote_filename)
     dirs = os.path.join( temp_folder, dirs )
     try:
-      os.mkdirs(dirs)
+      os.makedirs(dirs)
     except Exception,e:
       pass
     dest_filepath = os.path.join(temp_folder, remote_filename)
@@ -171,12 +171,11 @@ def main():
     tmpfile.write(f.read())
     tmpfile.close()
  
-  #Create temp folder if not exists
-  if not isdir(opts.temp_folder) and not exists(opts.temp_folder):
+  if not isdir(opts.temp_folder):
     try:
-      os.mkdirs(opts.temp_folder)
+      os.makedirs(opts.temp_folder)
     except Exception,e:
-      sys.stderr.write("Temp folder can not be created: %s\n" % opts.temp_folder);
+      sys.stderr.write("Temporary folder can not be created: %s\n" % opts.temp_folder);
       sys.exit(3)
 
   urlbase = "https://s3.amazonaws.com/%s/" % opts.bucket
