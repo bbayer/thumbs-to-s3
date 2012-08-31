@@ -202,7 +202,7 @@ def main():
         continue;
       width,height,format = matches[0]
       remote_filepath = format.replace("$",slugify(basefilename))
-      local_thumbpath, real_width, real_height = create_thumbnail(src_filepath, remote_filepath, opts.temp_folder, (width,height) )
+      local_thumbpath, real_width, real_height = create_thumbnail(src_filepath, remote_filepath, opts.temp_folder, (int(width),int(height)) )
       data = { 'width' : real_width,
                'height' : real_height,
                'filename' : remote_filepath,
