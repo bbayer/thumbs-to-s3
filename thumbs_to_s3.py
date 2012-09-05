@@ -154,9 +154,11 @@ def main():
   (opts,path) = options()
   src_filepath = None
   uploaded_files = []
+  basefilename = ''
   #Determine argument is file or url
   if isfile(path):
     src_filepath = path
+    basefilename = purge_extension(path)
   else:
     #If url specified download to local
     try:
@@ -165,11 +167,11 @@ def main():
       sys.stderr.write("An error occured while downloading image file: %s\n" % path)
       sys.exit(2)
 
-    tmpfilename = get_filename_from_url(path)
-    tmpfile = open(tmpfilename,"w+b");
+    tmpfile = tempfile.NamedTemporaryFile()
     src_filepath = tmpfile.name
     tmpfile.write(f.read())
     tmpfile.close()
+    basefilename = purge_extension(get_filename_from_url(path))
  
   if not isdir(opts.temp_folder):
     try:
@@ -191,10 +193,10 @@ def main():
     sys.stderr.write("An error occured while uploading files to S3. Check your key/secret and bucket name")
     sys.exit(3);
   
+
     
   #If there is parameters specified, create thumbnails accordingly
   if opts.thumbnails != None:
-    basefilename = purge_extension(src_filepath)
     for t in opts.thumbnails:
       #Parse size parameters WxH => (w,h)
       matches = re.findall(r"^(\d+)x(\d+):([\w\$\.\/]+)$",t)
