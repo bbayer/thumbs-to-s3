@@ -180,7 +180,7 @@ def main():
       sys.stderr.write("Temporary folder can not be created: %s\n" % opts.temp_folder);
       sys.exit(3)
 
-  urlbase = "https://s3.amazonaws.com/%s/" % opts.bucket
+  urlbase = "http://%s.s3.amazonaws.com/" % opts.bucket
   #Check whether file is correct
   if src_filepath == None:
     sys.stderr.write("Specified file couldn't be found: %s\n" % path);
