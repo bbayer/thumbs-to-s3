@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#coding=utf-8
 """ Thumbs to S3
 Thumbnail generator for Amazon S3
 Author: bbayer 
@@ -9,11 +10,11 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from optparse import OptionParser
 from os.path import isfile,basename,isdir,dirname,exists
-from urlparse import urlparse
 
 import re
 import urllib
 import urllib2
+import urlparse
 import tempfile
 import sys
 import unicodedata
@@ -21,6 +22,25 @@ import json
 import Image
 import os
 
+def url_fix(s, charset='utf-8'):
+  """Sometimes you get an URL by a user that just isn't a real
+  URL because it contains unsafe characters like ' ' and so on.  This
+  function can fix some of the problems in a similar way browsers
+  handle data entered by the user:
+
+  >>> url_fix(u'http://de.wikipedia.org/wiki/Elf (Begriffsklärung)')
+  'http://de.wikipedia.org/wiki/Elf%20%28Begriffskl%C3%A4rung%29'
+
+  :param charset: The target charset for the URL if the url was
+                  given as unicode string.
+  """
+  if isinstance(s, unicode):
+      s = s.encode(charset, 'ignore')
+  scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+  path = urllib.quote(path, '/%')
+  qs = urllib.quote_plus(qs, ':&=')
+  return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+    
 def slugify(value):
   """ Normalizes string, converts to lowercase, removes non-alpha characters,
   and converts spaces to hyphens.
@@ -60,7 +80,7 @@ def print_upload_data(opts, data):
     try:
       headers = {'Content-Type':'application/x-www-form-urlencoded'}
       params = urllib.urlencode({'data':json.dumps(data)})
-      req = urllib2.Request(opts.callback_url,params,headers)
+      req = urllib2.Request(opts.callback_url.encode('utf-8'),params,headers)
       response = urllib2.urlopen(req)
       print response.read()
     except Exception,e:
@@ -109,6 +129,8 @@ def options():
                     dest="output", default="text", help="Output format : json,post,text", type="choice", choices=["json","post","text"])
   parser.add_option("-c", "--callback-url",
                     dest="callback_url", help="Callback url for post output format" )
+  parser.add_option("-q", "--quote-url",
+                    dest="quote_url", default=False, action="store_true", help="Encode file urls" )
   (options,args) = parser.parse_args()
   
   if len(args) != 1:
@@ -134,7 +156,7 @@ def options():
 
 def get_filename_from_url(url):
   """ Creates a filename from specified url """ 
-  parsed_url = urlparse(urllib2.unquote(url))
+  parsed_url = urlparse.urlparse(urllib2.unquote(url))
   retval = basename(parsed_url.path)
   return retval
 
@@ -162,12 +184,14 @@ def main():
   else:
     #If url specified download to local
     try:
+      if opts.quote_url:
+        path = url_fix(path)
       f = urllib2.urlopen(path)
-    except:
-      sys.stderr.write("An error occured while downloading image file: %s\n" % path)
+    except Exception,e:
+      sys.stderr.write("An error occured while downloading image file: %s %s\n" % (path,e))
       sys.exit(2)
 
-    tmpfile = tempfile.NamedTemporaryFile()
+    tmpfile = tempfile.NamedTemporaryFile(delete=False)
     src_filepath = tmpfile.name
     tmpfile.write(f.read())
     tmpfile.close()
